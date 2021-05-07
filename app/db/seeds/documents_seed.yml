@@ -9,6 +9,7 @@
   content: |-
     ---
       val: 123
+      group: 雷門
 - filename: config.json
   description: credentials file
   content: '{ "name": "some name"}'
