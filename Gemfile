@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # Web API
 gem 'json'
-gem 'puma', '~>5'
+gem 'puma', '~>5.3.1'
 gem 'roda', '~>3'
 
 # Configuration
@@ -24,6 +24,9 @@ group :production do
   gem 'pg'
 end
 
+# External Services
+gem 'http'
+
 # Testing
 group :test do
   gem 'minitest'
@@ -32,6 +35,7 @@ end
 
 # Debugging
 gem 'pry' # necessary for rake console
+gem 'rack-test'
 
 # Development
 group :development do
@@ -41,7 +45,6 @@ group :development do
 end
 
 group :development, :test do
-  gem 'rack-test'
   gem 'sequel-seed'
   gem 'sqlite3'
 end
