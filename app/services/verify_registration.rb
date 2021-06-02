@@ -15,13 +15,9 @@ module Credence
     end
 
     # rubocop:disable Layout/EmptyLineBetweenDefs
-    def mail_key() = ENV['MAILGUN_API_KEY']
-    def mail_domain() = ENV['MAILGUN_DOMAIN']
-    def mail_credentials() = "api:#{mail_key}"
-    def mail_auth() = Base64.strict_encode64(mail_credentials)
-    def mail_url
-      "https://#{mail_credentials}@api.mailgun.net/v3/#{mail_domain}/messages"
-    end
+    def from_email() = ENV['SENDGRID_FROM_EMAIL']
+    def mail_api_key() = ENV['SENDGRID_API_KEY']
+    def mail_url() = 'https://api.sendgrid.com/v3/mail/send'
     # rubocop:enable Layout/EmptyLineBetweenDefs
 
     def call
@@ -48,29 +44,23 @@ module Credence
       END_EMAIL
     end
 
-    def text_email
-      <<~END_EMAIL
-        Credence Registration Received\n\n
-        Please use the following url to validate your email:\n
-        #{@registration[:verification_url]}\n\n
-        You will be asked to set a password to activate your account.
-      END_EMAIL
-    end
-
-    def mail_form
+    def mail_json
       {
-        from: 'noreply@credence-app.com',
-        to: @registration[:email],
-        subject: 'Credence Registration Verification',
-        text: text_email,
-        html: html_email
+        personalizations: [{
+          to: [{ 'email' => @registration[:email] }]
+        }],
+        from: { 'email' => from_email },
+        subject: 'Credent Registration Verification',
+        content: [
+          { type: 'text/html',
+            value: html_email }
+        ]
       }
     end
 
     def send_email_verification
-      HTTP
-        .auth("Basic #{mail_auth}")
-        .post(mail_url, form: mail_form)
+      HTTP.auth("Bearer #{mail_api_key}")
+          .post(mail_url, json: mail_json)
     rescue StandardError => e
       puts "EMAIL ERROR: #{e.inspect}"
       raise(InvalidRegistration,
