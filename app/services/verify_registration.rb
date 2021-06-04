@@ -17,7 +17,7 @@ module Credence
     # rubocop:disable Layout/EmptyLineBetweenDefs
     def from_email() = ENV['SENDGRID_FROM_EMAIL']
     def mail_api_key() = ENV['SENDGRID_API_KEY']
-    def mail_url() = 'https://api.sendgrid.com/v3/mail/send'
+    def mail_url() = ENV['SENDGRID_API_URL']
     # rubocop:enable Layout/EmptyLineBetweenDefs
 
     def call
