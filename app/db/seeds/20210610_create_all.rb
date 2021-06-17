@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require './app/controllers/helpers.rb'
+include Credence::SecureRequestHelpers
+
 Sequel.seed(:development) do
   def run
     puts 'Seeding accounts, projects, documents'
@@ -29,9 +32,7 @@ def create_owned_projects
     account = Credence::Account.first(username: owner['username'])
     owner['proj_name'].each do |proj_name|
       proj_data = PROJ_INFO.find { |proj| proj['name'] == proj_name }
-      Credence::CreateProjectForOwner.call(
-        owner_id: account.id, project_data: proj_data
-      )
+      account.add_owned_project(proj_data)
     end
   end
 end
@@ -42,8 +43,12 @@ def create_documents
   loop do
     doc_info = doc_info_each.next
     project = projects_cycle.next
-    Credence::CreateDocumentForProject.call(
-      project_id: project.id, document_data: doc_info
+
+    auth_token = AuthToken.create(project.owner)
+    auth = scoped_auth(auth_token)
+
+    Credence::CreateDocument.call(
+      auth: auth, project: project, document_data: doc_info
     )
   end
 end
@@ -51,10 +56,14 @@ end
 def add_collaborators
   contrib_info = CONTRIB_INFO
   contrib_info.each do |contrib|
-    proj = Credence::Project.first(name: contrib['proj_name'])
+    project = Credence::Project.first(name: contrib['proj_name'])
+
+    auth_token = AuthToken.create(project.owner)
+    auth = scoped_auth(auth_token)
+
     contrib['collaborator_email'].each do |email|
-      Credence::AddCollaboratorToProject.call(
-        email: email, project_id: proj.id
+      Credence::AddCollaborator.call(
+        auth: auth, project: project, collab_email: email
       )
     end
   end
